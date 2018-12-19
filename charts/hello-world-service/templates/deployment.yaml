@@ -1,0 +1,66 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "hello-world-service.fullname" . }}
+  labels:
+    app: {{ include "hello-world-service.name" . }}
+    chart: {{ include "hello-world-service.chart" . }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app: {{ include "hello-world-service.name" . }}
+      release: {{ .Release.Name }}
+  template:
+    metadata:
+      labels:
+        app: {{ include "hello-world-service.name" . }}
+        release: {{ .Release.Name }}
+    spec:
+      # need longer termination period (default is 30s) because of headless service DNS TTL
+      terminationGracePeriodSeconds: 60
+      containers:
+        - name: {{ .Chart.Name }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+            - name: grpc
+              containerPort: 9090
+              protocol: TCP
+          env:
+          - name: POD_NAME
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.name
+          readinessProbe:
+            exec:
+              command: ["/bin/grpc_health_probe", "-addr", "localhost:9090", "-service", "Greeter"]
+            initialDelaySeconds: 15
+            timeoutSeconds: 3
+            periodSeconds: 1
+          # Liveness probe is slow and since we're using the same health probe
+          # as in the readiness probe, we don't want container restarts when we
+          # are in shutdown phase
+#          livenessProbe:
+#            exec:
+#              command: ["/bin/grpc_health_probe", "-addr=localhost:9090", "-service=Greeter"]
+#            initialDelaySeconds: 60
+#            timeoutSeconds: 3
+#            periodSeconds: 30
+#            failureThreshold: 3
+          resources:
+{{ toYaml .Values.resources | indent 12 }}
+    {{- with .Values.nodeSelector }}
+      nodeSelector:
+{{ toYaml . | indent 8 }}
+    {{- end }}
+    {{- with .Values.affinity }}
+      affinity:
+{{ toYaml . | indent 8 }}
+    {{- end }}
+    {{- with .Values.tolerations }}
+      tolerations:
+{{ toYaml . | indent 8 }}
+    {{- end }}

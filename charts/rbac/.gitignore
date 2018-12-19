@@ -1,0 +1,4 @@
+pki/*
+*.crt
+*.key
+*.csr

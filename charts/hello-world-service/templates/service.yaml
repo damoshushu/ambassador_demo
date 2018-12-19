@@ -1,0 +1,20 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "hello-world-service.fullname" . }}
+  labels:
+    app: {{ include "hello-world-service.name" . }}
+    chart: {{ include "hello-world-service.chart" . }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+spec:
+  type: {{ .Values.service.type }}
+  ports:
+    - port: {{ .Values.service.port }}
+      targetPort: grpc
+      protocol: TCP
+      name: grpc
+  clusterIP: None
+  selector:
+    app: {{ include "hello-world-service.name" . }}
+    release: {{ .Release.Name }}

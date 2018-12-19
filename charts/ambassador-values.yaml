@@ -1,0 +1,33 @@
+ambassador:
+  id: demo_id
+
+namespace:
+  single: true
+
+replicaCount: 2
+
+service:
+  enableHttps: false
+  type: LoadBalancer
+  httpPort: 9090
+
+# we can't use cluster roles and have to create single namespace roles instead
+rbac:
+  create: false
+
+# same for service account
+serviceAccount:
+  create: false
+  name: ambassador-service-account
+
+volumes: {}
+
+volumeMounts: {}
+
+resources: 
+#  limits:
+#    cpu: 100m
+#    memory: 128Mi
+  requests:
+    cpu: 100m
+    memory: 128Mi

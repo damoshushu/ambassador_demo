@@ -1,0 +1,80 @@
+# https://docs.bitnami.com/kubernetes/how-to/configure-rbac-in-your-kubernetes-cluster/
+kind: Namespace
+apiVersion: v1
+metadata:
+  name: ambassador-poc
+  labels:
+    name: ambassador-poc
+---
+kind: Role
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: ambassador-poc-admin-role
+  namespace: ambassador-poc
+rules:
+- apiGroups: ["*"] # "" indicates the core API group
+  resources: ["*"]
+  verbs: ["*"]
+---
+# This role binding allows "dave" to read secrets in the "development" namespace.
+kind: RoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: ambassador-poc-admin-role-binding
+  namespace: ambassador-poc
+subjects:
+- kind: User
+  name: employee
+  apiGroup: rbac.authorization.k8s.io
+roleRef:
+  kind: Role
+  name: ambassador-poc-admin-role
+  apiGroup: rbac.authorization.k8s.io
+---
+kind: ServiceAccount
+apiVersion: v1
+metadata:
+  name: ambassador-poc-tiller-service-account
+  namespace: ambassador-poc
+---
+# This role binding allows "dave" to read secrets in the "development" namespace.
+kind: RoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: ambassador-poc-admin-role-binding-tiller
+  namespace: ambassador-poc
+subjects:
+- kind: ServiceAccount
+  name: ambassador-poc-tiller-service-account
+  namespace: ambassador-poc
+roleRef:
+  kind: Role
+  name: ambassador-poc-admin-role
+  apiGroup: rbac.authorization.k8s.io
+---
+# limit access to helm to rest of cluster
+# https://medium.com/@elijudah/configuring-minimal-rbac-permissions-for-helm-and-tiller-e7d792511d10
+kind: ClusterRole
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: helm-clusterrole
+rules:
+  - apiGroups: [""]
+    resources: ["pods/portforward"]
+    verbs: ["create"]
+  - apiGroups: [""]
+    resources: ["pods"]
+    verbs: ["list", "get"]
+---
+kind: ClusterRoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: helm-clusterrolebinding
+roleRef:
+  kind: ClusterRole
+  apiGroup: rbac.authorization.k8s.io
+  name: helm-clusterrole
+subjects:
+- kind: ServiceAccount
+  name: ambassador-poc-tiller-service-account
+  namespace: ambassador-poc

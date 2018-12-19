@@ -1,0 +1,28 @@
+kind: Service
+apiVersion: v1
+metadata:
+  name: dummy-service
+  annotations:
+    getambassador.io/config: |
+      ---
+      apiVersion: ambassador/v0
+      kind:  Mapping
+      name:  service-a-mapping
+      ambassador_id: demo_id
+      grpc: true
+      prefix: /
+      service: a-hello-world-service:9090
+      ---
+      apiVersion: ambassador/v0
+      kind:  Mapping
+      name:  service-b-mapping
+      ambassador_id: demo_id
+      grpc: true
+      prefix: /
+      service: b-hello-world-service:9090
+      weight: 50
+spec:
+  ports:
+  - protocol: TCP
+    port: 80
+
